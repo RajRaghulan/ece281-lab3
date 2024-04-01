@@ -37,18 +37,19 @@
 --|					
 --|
 --|                 xxx State Encoding key
---|                 --------------------
---|                  State | Encoding
---|                 --------------------
---|                  OFF   | 
---|                  ON    | 
---|                  R1    | 
---|                  R2    | 
---|                  R3    | 
---|                  L1    | 
---|                  L2    | 
---|                  L3    | 
---|                 --------------------
+--|                --| One-Hot State Encoding key
+                    --| --------------------
+                    --| State | Encoding
+                    --| --------------------
+                    --| OFF   | 10000000
+                    --| ON    | 01000000
+                    --| R1    | 00100000
+                    --| R2    | 00010000
+                    --| R3    | 00001000
+                    --| L1    | 00000100
+                    --| L2    | 00000010
+                    --| L3    | 00000001
+                    --| --------------------
 --|
 --|
 --+----------------------------------------------------------------------------
@@ -81,28 +82,65 @@
 --|    s_<signal name>          = state name
 --|
 --+----------------------------------------------------------------------------
+-----------------------
+
+
+
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.numeric_std.all;
  
 entity thunderbird_fsm is 
   port(
-	
+    i_clk, i_reset  : in    std_logic;
+    i_left, i_right : in    std_logic;
+    o_lights_L      : out   std_logic_vector(2 downto 0);
+    o_lights_R      : out   std_logic_vector(2 downto 0)
   );
 end thunderbird_fsm;
 
 architecture thunderbird_fsm_arch of thunderbird_fsm is 
 
 -- CONSTANTS ------------------------------------------------------------------
-  
+    signal state: std_logic_vector (7 downto 0) := "10000000";
+    signal state_next: std_logic_vector (7 downto 0) := "10000000";
+     
 begin
 
 	-- CONCURRENT STATEMENTS --------------------------------------------------------	
 	
+	state_next <= (
+	   7 => (state(7) and (not i_left) and (not i_right)) or state(6) or state(3) or state(0),
+	   6 => state(7) and i_left and i_right,
+	   5 => state(7) and (not i_left) and i_right,
+       4 => state(5),
+       3 => state(4),
+       2 => state(7) and i_left and (not i_right),
+       1 => state(2),
+       0 => state(1)
+	);
+	
     ---------------------------------------------------------------------------------
 	
-	-- PROCESSES --------------------------------------------------------------------
-    
-	-----------------------------------------------------					   
+	o_lights_L <= (
+        2 => state(6) or state(0),
+        1 => state(6) or state(0) or state(1),
+        0 => state(6) or state(0) or state(1) or state(2)
+	);
+	
+    o_lights_R <= (
+        2 => state(6) or state(3),
+        1 => state(6) or state(3) or state(4),
+        0 => state(6) or state(3) or state(4) or state(5)
+    );
+	
+    register_proc : process (i_clk, i_reset)
+        begin
+            if i_reset = '1' then
+                state <= "10000000";      
+            elsif (rising_edge(i_clk)) then
+                state <= state_next;  
+            end if;
+        end process register_proc;
 				  
 end thunderbird_fsm_arch;
