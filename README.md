@@ -6,6 +6,15 @@ Targeted toward Digilent Basys3. Make sure to install the [board files](https://
 
 Tested on Windows 11.
 
+Documentation Statement: 
+
+C3C Ethan Chapman explained to me a more concise way to implement the one-hot encoding protocol, he also explained to me the best way to test the lights using the testbench. He also explained to me how to use the board lights to test the actual functionality on the board. 
+
+
+##Waveform:
+
+![Waveform from thunderbird_fsm_tb](Waveform.png)
+
 ---
 
 ## Build the project
